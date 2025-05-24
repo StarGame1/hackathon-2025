@@ -30,21 +30,48 @@ class AuthController extends BaseController
 
     public function register(Request $request, Response $response): Response
     {
-        // TODO: call corresponding service to perform user registration
+        $data = $request->getParsedBody();
 
-        return $response->withHeader('Location', '/login')->withStatus(302);
+        try {
+            $user = $this->authService->register(
+                $data['username'] ?? '',
+                $data['password'] ?? ''
+            );
+            return $response->withHeader('Location', '/login')->withStatus(302);
+        } catch (\InvalidArgumentException $error) {
+            $errorMessage = $error->getMessage();
+            $errors = [];
+
+            if (stripos($errorMessage, 'username') !== false) {
+                $errors['username'] = $errorMessage;
+            } elseif (stripos($errorMessage, 'password') !== false) {
+                $errors['password'] = $errorMessage;
+            }
+            return $this->render($response, 'auth/register.twig', [
+                'username' => $formData['username'] ?? '',
+                'errors' => $errors
+            ]);
+        }
     }
 
     public function showLogin(Request $request, Response $response): Response
     {
-        return $this->render($response, 'auth/login.twig');
+        return $this->render($response, 'auth/login.twig', ['error' => 'Invalid user or password']);
     }
 
     public function login(Request $request, Response $response): Response
     {
-        // TODO: call corresponding service to perform user login, handle login failures
+        $data = $request->getParsedBody();
+        $is_success = $this->authService->attempt(
+            $data['username'] ?? '',
+            $data['password'] ?? ''
+        );
 
-        return $response->withHeader('Location', '/')->withStatus(302);
+        if ($is_success) {
+            return $response->withHeader('Location', '/')->withStatus(302);
+        }
+
+        return $this->render($response, 'auth/login.twig', ['error' => 'Invalid user or password']);
     }
 
     public function logout(Request $request, Response $response): Response

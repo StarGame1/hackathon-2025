@@ -70,9 +70,25 @@ class AuthService
 
     public function attempt(string $username, string $password): bool
     {
-        // TODO: implement this for authenticating the user
-        // TODO: make sur ethe user exists and the password matches
-        // TODO: don't forget to store in session user data needed afterwards
+        $user = $this->users->findByUsername($username);
+
+        if ($user === null) {
+            return false;
+        }
+
+        if (!password_verify($password, $user->passwordHash)) {
+            return false;
+        }
+
+        #Incepem o sesiune si salvam id si username
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        $_SESSION['user_id'] = $user->id;
+        $_SESSION['username'] = $user->username;
+
+        session_regenerate_id(true);
 
         return true;
     }
