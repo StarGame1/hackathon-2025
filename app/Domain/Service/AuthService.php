@@ -6,6 +6,7 @@ namespace App\Domain\Service;
 
 use App\Domain\Entity\User;
 use App\Domain\Repository\UserRepositoryInterface;
+use InvalidArgumentException;
 
 class AuthService
 {
@@ -27,10 +28,10 @@ class AuthService
 
     private function validatePassword(string $password): void
     {
-        if(strlen($password) < self::MIN_PASSWORD_LENGTH){
+        if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
             throw new InvalidArgumentException('Password must be at least' . self::MIN_PASSWORD_LENGTH . 'characters long.');
         }
-        if(!preg_match(self::PASSWORD_REGEX, $password)){
+        if (!preg_match(self::PASSWORD_REGEX, $password)) {
             throw new InvalidArgumentException('Password must contain at least a number');
         }
     }
@@ -38,7 +39,7 @@ class AuthService
 
     private function isUniqueUsername(string $username): void
     {
-        if(this->users->findByUsername($username) !==null){
+        if ($this->users->findByUsername($username) !== null) {
             throw new InvalidArgumentException('Username already exists');
         }
     }
@@ -49,14 +50,14 @@ class AuthService
             null,
             $username,
             password_hash($password, PASSWORD_DEFAULT),
-            new DateTimeImmutable()
+            new \DateTimeImmutable()
         );
     }
 
 
     public function register(string $username, string $password): User
     {
-        
+
 
         $this->validateUsername($username);
         $this->validatePassword($password);
