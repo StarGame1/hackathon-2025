@@ -78,7 +78,26 @@ class ExpenseService
         DateTimeImmutable $date,
         string $category,
     ): void {
-        // TODO: implement this to update expense entity, perform validation, and persist
+        #validari
+        if ($amount <= 0) {
+            throw new \InvalidArgumentException('Amount must be greater than 0');
+        }
+        
+        if (empty($description)) {
+            throw new \InvalidArgumentException('Description cannot be empty');
+        }
+        
+        if ($date > new DateTimeImmutable()) {
+            throw new \InvalidArgumentException('Date cannot be in the future');
+        }
+        #dam update la valori
+        $expense->amountCents = (int)round($amount * 100);
+        $expense->description = $description;
+        $expense->date = $date;
+        $expense->category = $category;
+        
+        $this->expenses->save($expense);
+
     }
 
     public function importFromCsv(User $user, UploadedFileInterface $csvFile): int
@@ -99,5 +118,15 @@ class ExpenseService
         rsort($years);
 
         return $years;
+    }
+
+    public function findById(int $id): ?Expense
+    {
+        return $this->expenses->find($id);
+    }
+
+    public function delete(int $id): void
+    {
+        $this->expenses->delete($id);
     }
 }
