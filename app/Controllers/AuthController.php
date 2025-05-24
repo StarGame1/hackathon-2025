@@ -76,8 +76,9 @@ class AuthController extends BaseController
 
     public function logout(Request $request, Response $response): Response
     {
-        // TODO: handle logout by clearing session data and destroying session
-
+        session_start();
+        $_SESSION = [];
+        session_destroy();
         return $response->withHeader('Location', '/login')->withStatus(302);
     }
 }
