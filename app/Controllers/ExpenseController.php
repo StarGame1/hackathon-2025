@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Domain\Repository\UserRepositoryInterface;
 use App\Domain\Service\ExpenseService;
+use DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Views\Twig;
@@ -16,6 +18,7 @@ class ExpenseController extends BaseController
     public function __construct(
         Twig $view,
         private readonly ExpenseService $expenseService,
+        private readonly UserRepositoryInterface $userRepository
     ) {
         parent::__construct($view);
     }
@@ -26,44 +29,81 @@ class ExpenseController extends BaseController
 
         // Hints:
         // - use the session to get the current user ID
+        $userId = $_SESSION['user_id'];
+        $user = $this->userRepository->find($userId);
+
+
         // - use the request query parameters to determine the page number and page size
-        // - use the expense service to fetch expenses for the current user
+        $queryParams = $request->getQueryParams();
+        $page = (int)($queryParams['page'] ?? 1);
+        $pageSize = (int)($queryParams['pageSize'] ?? self::PAGE_SIZE);
 
-        // parse request parameters
-        $userId = 1; // TODO: obtain logged-in user ID from session
-        $page = (int)($request->getQueryParams()['page'] ?? 1);
-        $pageSize = (int)($request->getQueryParams()['pageSize'] ?? self::PAGE_SIZE);
+        $year = (int)($queryParams['year'] ?? date('Y'));
+        $month = (int)($queryParams['month'] ?? date('n'));
 
-        $expenses = $this->expenseService->list($userId, $page, $pageSize);
+        $result = $this->expenseService->list($user, $year, $month, $page, $pageSize);
+        $availableYears = $this->expenseService->getAvailableYears($user);
 
         return $this->render($response, 'expenses/index.twig', [
-            'expenses' => $expenses,
-            'page'     => $page,
-            'pageSize' => $pageSize,
+            'expenses' => $result['items'],
+            'total' => $result['total'],
+            'page' => $result['page'],
+            'pageSize' => $result['pageSize'],
+            'totalPages' => $result['totalPages'],
+            'currentYear' => $year,
+            'currentMonth' => $month,
+            'availableYears' => $availableYears,
         ]);
+    }
+
+    private function getCategories(): array
+    {
+        // TODO: trebe mutate in .env
+        return [
+            'groceries' => 'Groceries',
+            'utilities' => 'Utilities',
+            'transport' => 'Transport',
+            'entertainment' => 'Entertainment',
+            'housing' => 'Housing',
+            'health' => 'Healthcare',
+            'other' => 'Other'
+        ];
     }
 
     public function create(Request $request, Response $response): Response
     {
-        // TODO: implement this action method to display the create expense page
+        $categories = $this->getCategories();
 
-        // Hints:
-        // - obtain the list of available categories from configuration and pass to the view
 
-        return $this->render($response, 'expenses/create.twig', ['categories' => []]);
+        return $this->render($response, 'expenses/create.twig', [
+            'categories' => $categories
+        ]);
     }
 
     public function store(Request $request, Response $response): Response
     {
-        // TODO: implement this action method to create a new expense
 
-        // Hints:
-        // - use the session to get the current user ID
-        // - use the expense service to create and persist the expense entity
-        // - rerender the "expenses.create" page with included errors in case of failure
-        // - redirect to the "expenses.index" page in case of success
+        $userId = $_SESSION['user_id'];
+        $user = $this->userRepository->find($userId);
+        $data = $request->getParsedBody();
 
-        return $response;
+
+        try {
+            $this->expenseService->create(
+                $user,
+                (float)($data['amount'] ?? 0),
+                $data['description'] ?? '',
+                new DateTimeImmutable($data['date'] ?? 'now'),
+                $data['category'] ?? ''
+            );
+            return $response->withHeader('Location', '/expenses')->withStatus(302);
+        } catch (\InvalidArgumentException $error) {
+            return $this->render($response, 'expenses/create.twig', [
+                'categories' => $this->getCategories(),
+                'errors' => ['general' => $error->getMessage()],
+                'formData' => $data
+            ]);
+        }
     }
 
     public function edit(Request $request, Response $response, array $routeParams): Response
