@@ -9,17 +9,59 @@ use App\Domain\Repository\UserRepositoryInterface;
 
 class AuthService
 {
+    private const MIN_USERNAME_LENGTH = 4;
+    private const MIN_PASSWORD_LENGTH = 8;
+    private const PASSWORD_REGEX = '/[0-9]/';
+
     public function __construct(
         private readonly UserRepositoryInterface $users,
     ) {}
 
+    private function validateUsername(string $username): void
+    {
+        if (strlen($username) < self::MIN_USERNAME_LENGTH) {
+            throw new InvalidArgumentException('Username must be at least ' . self::MIN_USERNAME_LENGTH . ' characters long.');
+        }
+    }
+
+
+    private function validatePassword(string $password): void
+    {
+        if(strlen($password) < self::MIN_PASSWORD_LENGTH){
+            throw new InvalidArgumentException('Password must be at least' . self::MIN_PASSWORD_LENGTH . 'characters long.');
+        }
+        if(!preg_match(self::PASSWORD_REGEX, $password)){
+            throw new InvalidArgumentException('Password must contain at least a number');
+        }
+    }
+
+
+    private function isUniqueUsername(string $username): void
+    {
+        if(this->users->findByUsername($username) !==null){
+            throw new InvalidArgumentException('Username already exists');
+        }
+    }
+
+    private function createUser(string $username, string $password): User
+    {
+        return new User(
+            null,
+            $username,
+            password_hash($password, PASSWORD_DEFAULT),
+            new DateTimeImmutable()
+        );
+    }
+
+
     public function register(string $username, string $password): User
     {
-        // TODO: check that a user with same username does not exist, create new user and persist
-        // TODO: make sure password is not stored in plain, and proper PHP functions are used for that
+        
 
-        // TODO: here is a sample code to start with
-        $user = new User(null, $username, $password, new \DateTimeImmutable());
+        $this->validateUsername($username);
+        $this->validatePassword($password);
+        $this->isUniqueUsername($username);
+        $user = $this->createUser($username, $password);
         $this->users->save($user);
 
         return $user;
