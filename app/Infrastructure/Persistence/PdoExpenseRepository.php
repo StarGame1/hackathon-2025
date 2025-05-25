@@ -22,7 +22,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
      */
     public function find(int $id): ?Expense
     {
-        $query = 'SELECT * FROM expenses WHERE id = :id';
+        $query = 'SELECT * FROM expenses WHERE id = :id AND deleted_at IS NULL';
         $statement = $this->pdo->prepare($query);
         $statement->execute(['id' => $id]);
         $data = $statement->fetch();
@@ -74,8 +74,13 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function delete(int $id): void
     {
-        $statement = $this->pdo->prepare('DELETE FROM expenses WHERE id=?');
-        $statement->execute([$id]);
+        $statement = $this->pdo->prepare(
+            'UPDATE expenses SET deleted_at = :deleted_at WHERE id = :id'
+        );
+        $statement->execute([
+            'id' => $id,
+            'deleted_at' => date('Y-m-d H:i:s')
+        ]);
     }
 
     public function findBy(array $criteria, int $from, int $limit): array
@@ -83,6 +88,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
         #adunam dinamic conditiile WHERE
         $params = [];
         $conditions = [];
+        $conditions[] = 'deleted_at IS NULL';
 
         if (isset($criteria['user_id'])) {
             $conditions[] = 'user_id = :user_id';
@@ -95,6 +101,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
             $params['year'] = sprintf('%04d', $criteria['year']);
             $params['month'] = sprintf('%02d', $criteria['month']);
         }
+        
         #realizam clauza cu conditiile adunate
         $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
@@ -128,6 +135,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
         #adunam conditii WHERE dinamic
         $conditions = [];
         $params = [];
+        $conditions[] = 'deleted_at IS NULL';
 
         if (isset($criteria['user_id'])) {
             $conditions[] = 'user_id = :user_id';
@@ -140,7 +148,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
             $params['year'] = sprintf('%04d', $criteria['year']);
             $params['month'] = sprintf('%02d', $criteria['month']);
         }
-
+        
         $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
 
         $query = "SELECT COUNT(*) as total FROM expenses $whereClause";
@@ -172,6 +180,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
     {
         $conditions = [];
         $params = [];
+        $conditions[] = 'deleted_at IS NULL';
         
         if (isset($criteria['user_id'])) {
             $conditions[] = 'user_id = :user_id';
@@ -207,6 +216,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
     {
         $conditions = [];
         $params = [];
+        $conditions[] = 'deleted_at IS NULL';
         
         if (isset($criteria['user_id'])) {
             $conditions[] = 'user_id = :user_id';
@@ -242,6 +252,7 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
     {
         $conditions = [];
         $params = [];
+        $conditions[] = 'deleted_at IS NULL';
         
         #verificam daca e user_id potrivit
         if (isset($criteria['user_id'])) {

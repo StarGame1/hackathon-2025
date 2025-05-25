@@ -31,11 +31,21 @@ class AuthController extends BaseController
     public function register(Request $request, Response $response): Response
     {
         $data = $request->getParsedBody();
+        $username = $data['username'] ?? '';
+        $password = $data['password'] ?? '';
+        $passwordConfirm = $data['password_confirm'] ?? '';
+        
+        if ($password !== $passwordConfirm) {
+            return $this->render($response, 'auth/register.twig', [
+                'username' => $username,
+                'errors' => ['password_confirm' => 'Passwords does not match']
+            ]);
+        }
 
         try {
             $user = $this->authService->register(
-                $data['username'] ?? '',
-                $data['password'] ?? ''
+                $username ?? '',
+                $password ?? ''
             );
             return $response->withHeader('Location', '/login')->withStatus(302);
         } catch (\InvalidArgumentException $error) {
