@@ -10,6 +10,7 @@
     {% endif %}
     <section class="mb-8">
         <form action="/expenses" method="POST" class="max-w-sm mx-auto">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <div class="mb-4 flex items-center">
                 <label for="date" class="w-24 text-gray-300 font-bold">Date:</label>
                 <input type="date" id="date" name="date" required

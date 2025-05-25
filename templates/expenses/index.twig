@@ -16,6 +16,7 @@
         <h2 class="text-xl font-bold mb-4">List monthly expenses</h2>
         {# Listing filters #}
         <form action="/expenses" method="GET" class="mb-6 flex gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <div>
             <label for="year" class="block text-gray-300 text-sm font-bold mb-2">Year</label>
             <select name="year" id="year" class="shadow border rounded py-2 px-3 text-gray-400">
@@ -93,6 +94,7 @@
     <section class="mb-8">
         <h2 class="text-xl font-bold mb-4">Import expenses from CSV</h2>
         <form action="expenses/import" method="POST" enctype="multipart/form-data" class="flex items-center gap-4">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <label for="csvFile" class="text-gray-300 text-sm font-bold">CSV File</label>
             <input type="file" id="csv" name="csv" accept=".csv" required
                    class="shadow appearance-none border rounded py-2 px-3 text-gray-500 leading-tight focus:outline-none focus:shadow-outline">
