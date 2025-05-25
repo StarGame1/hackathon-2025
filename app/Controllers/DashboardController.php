@@ -20,7 +20,7 @@ class DashboardController extends BaseController
         Twig $view,
         private readonly UserRepositoryInterface $userRepository,
         private readonly ExpenseRepositoryInterface $expenseRepository,
-        private readonly MonthlySummaryService $monthlySummaryService,
+        private readonly MonthlySummaryService $monthlySummaryS,
         private readonly AlertGenerator $alertGenerator,
     )
     {
@@ -49,16 +49,16 @@ class DashboardController extends BaseController
         // TODO: call service to compute total expenditure per selected year/month
         // TODO: call service to compute category totals per selected year/month
         // TODO: call service to compute category averages per selected year/month
-        $totalForMonth = $this->monthlySummaryService->computeTotalExpenditure($user, $year, $month);
-        $totalsForCategories = $this->monthlySummaryService->computePerCategoryTotals($user, $year, $month);
-        $averagesForCategories = $this->monthlySummaryService->computePerCategoryAverages($user, $year, $month);
+        $totalForMonth = $this->monthlySummaryS->computeTotalExpenditure($user, $year, $month);
+        $totalsForCategories = $this->monthlySummaryS->computePerCategoryTotals($user, $year, $month);
+        $averagesForC = $this->monthlySummaryS->computePerCategoryAverages($user, $year, $month);
         
 
         return $this->render($response, 'dashboard.twig', [
             'alerts' => $alerts,
             'totalForMonth' => $totalForMonth,
             'totalsForCategories' => $totalsForCategories,
-            'averagesForCategories' => $averagesForCategories,
+            'averagesForCategories' => $averagesForC,
             'availableYears' => $availableYears,
             'selectedYear' => $year,
             'selectedMonth' => $month,

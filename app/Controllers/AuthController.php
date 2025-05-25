@@ -34,7 +34,7 @@ class AuthController extends BaseController
         $username = $data['username'] ?? '';
         $password = $data['password'] ?? '';
         $passwordConfirm = $data['password_confirm'] ?? '';
-        
+
         if ($password !== $passwordConfirm) {
             return $this->render($response, 'auth/register.twig', [
                 'username' => $username,
@@ -44,8 +44,8 @@ class AuthController extends BaseController
 
         try {
             $user = $this->authService->register(
-                $username ?? '',
-                $password ?? ''
+                $username,
+                $password
             );
             return $response->withHeader('Location', '/login')->withStatus(302);
         } catch (\InvalidArgumentException $error) {
@@ -58,7 +58,7 @@ class AuthController extends BaseController
                 $errors['password'] = $errorMessage;
             }
             return $this->render($response, 'auth/register.twig', [
-                'username' => $formData['username'] ?? '',
+                'username' => $data['username'],
                 'errors' => $errors
             ]);
         }

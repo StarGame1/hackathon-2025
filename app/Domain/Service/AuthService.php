@@ -29,10 +29,10 @@ class AuthService
     private function validatePassword(string $password): void
     {
         if (strlen($password) < self::MIN_PASSWORD_LENGTH) {
-            throw new InvalidArgumentException('Password must be at least' . self::MIN_PASSWORD_LENGTH . 'characters long.');
+            throw new InvalidArgumentException('Password must be at least ' . self::MIN_PASSWORD_LENGTH . ' characters long.');
         }
         if (!preg_match(self::PASSWORD_REGEX, $password)) {
-            throw new InvalidArgumentException('Password must contain at least a number');
+            throw new InvalidArgumentException('Password must contain at least one number');
         }
     }
 

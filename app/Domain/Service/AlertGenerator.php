@@ -9,7 +9,7 @@ use App\Domain\Entity\User;
 class AlertGenerator
 {
     public function __construct(
-        private readonly MonthlySummaryService $monthlySummaryService,
+        private readonly MonthlySummaryService $monthlySummaryS,
         private readonly CategoryConfigService $categoryConfig,
     )
     {
@@ -33,7 +33,7 @@ class AlertGenerator
     {
         $alerts = [];
         #luam datele despre total pe categorie
-        $totalsD = $this->monthlySummaryService->computePerCategoryTotals($user, $year, $month);
+        $totalsD = $this->monthlySummaryS->computePerCategoryTotals($user, $year, $month);
 
 
         #extragem doar valoarea
@@ -43,7 +43,7 @@ class AlertGenerator
         }
 
         $budgets = $this->categoryConfig->getBudgets();
-        
+
         #verificam daca e overspent pt fiecare categorie
         foreach($this->categoryBudgets as $category => $budget){
             $key = strtolower($category) ;

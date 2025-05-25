@@ -16,9 +16,9 @@ class ExpenseService
 {
     public function __construct(
         private readonly ExpenseRepositoryInterface $expenses,
-        private readonly \PDO $pdo,
-        private readonly ?LoggerInterface $logger = null, 
         private readonly CategoryConfigService $categoryConfig,
+        private readonly \PDO $pdo,
+        private readonly ?LoggerInterface $logger = null  
     ) {}
 
     public function list(User $user, int $year, int $month, int $pageNumber, int $pageSize): array
