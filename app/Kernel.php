@@ -82,6 +82,9 @@ class Kernel
         $twig->getEnvironment()->addGlobal('currentUserId', $loggedInUserId);
         $twig->getEnvironment()->addGlobal('currentUserName', $loggedInUsername);
         $twig->getEnvironment()->addGlobal('csrf_token', $_SESSION['csrf_token'] ?? '');
+        $flash = $_SESSION['flash'] ?? [];
+        unset($_SESSION['flash']);
+        $twig->getEnvironment()->addGlobal('flash', $flash);
 
         return $app;
     }

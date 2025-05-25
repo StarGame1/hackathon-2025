@@ -172,6 +172,8 @@ class ExpenseController extends BaseController
         }
     
         $this->expenseService->delete($expenseId);
+        $_SESSION['flash']['success'] = 'Expense deleted successfully!';
+
     
         return $response->withHeader('Location', '/expenses')->withStatus(302);
     }
@@ -195,6 +197,7 @@ class ExpenseController extends BaseController
             $importedCount = $this->expenseService->importFromCsv($user, $csvFile);
             
             $this->logger->info(sprintf('CSV import completed.'));
+            $_SESSION['flash']['success'] = sprintf('Successfully imported %d expenses!', $importedCount);
             
             return $response
                 ->withHeader('Location', '/expenses')
