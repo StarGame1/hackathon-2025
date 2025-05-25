@@ -15,7 +15,7 @@ use App\Domain\Service\CategoryConfigService;
 
 class ExpenseController extends BaseController
 {
-    private const PAGE_SIZE = 20;
+    private const PAGE_SIZE = 5;
 
     public function __construct(
         Twig $view,

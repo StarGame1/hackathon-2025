@@ -16,7 +16,7 @@
         <h2 class="text-xl font-bold mb-4">List monthly expenses</h2>
         {# Listing filters #}
         <form action="/expenses" method="GET" class="mb-6 flex gap-4">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+        
         <div>
             <label for="year" class="block text-gray-300 text-sm font-bold mb-2">Year</label>
             <select name="year" id="year" class="shadow border rounded py-2 px-3 text-gray-400">
@@ -74,22 +74,49 @@
 
         {# Listing pagination #}
         <div class="mt-1 flex justify-center">{{ total }} item(s)</div>
-        <div class="mt-1 flex justify-between">
-             {% if page > 1 %}
-            <a href="?page={{ page - 1 }}&year={{ currentYear }}&month={{ currentMonth }}" 
-               class="text-blue-500 hover:text-blue-400">Previous</a>
-        {% else %}
-            <span></span>
-        {% endif %}
-
-        {% if page < totalPages %}
-            <a href="?page={{ page + 1 }}&year={{ currentYear }}&month={{ currentMonth }}" 
-               class="text-blue-500 hover:text-blue-400">Next</a>
-        {% else %}
-            <span></span>
-        {% endif %}
+        <div class="mt-4 flex justify-center items-center space-x-2">
+            {% if page > 1 %}
+                <a href="?page={{ page - 1 }}&year={{ currentYear }}&month={{ currentMonth }}" 
+                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">Previous</a>
+            {% endif %}
+            
+            {% set startPage = max(1, page - 2) %}
+            {% set endPage = min(totalPages, page + 2) %}
+            
+            {% if startPage > 1 %}
+                <a href="?page=1&year={{ currentYear }}&month={{ currentMonth }}" 
+                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">1</a>
+                {% if startPage > 2 %}
+                    <span class="text-gray-500">...</span>
+                {% endif %}
+            {% endif %}
+            
+            {% for p in startPage..endPage %}
+                {% if p == page %}
+                    <span class="px-3 py-1 bg-blue-600 text-white rounded">{{ p }}</span>
+                {% else %}
+                    <a href="?page={{ p }}&year={{ currentYear }}&month={{ currentMonth }}" 
+                    class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">{{ p }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if endPage < totalPages %}
+                {% if endPage < totalPages - 1 %}
+                    <span class="text-gray-500">...</span>
+                {% endif %}
+                <a href="?page={{ totalPages }}&year={{ currentYear }}&month={{ currentMonth }}" 
+                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">{{ totalPages }}</a>
+            {% endif %}
+            
+            {% if page < totalPages %}
+                <a href="?page={{ page + 1 }}&year={{ currentYear }}&month={{ currentMonth }}" 
+                class="px-3 py-1 bg-gray-700 text-gray-300 rounded hover:bg-gray-600">Next</a>
+            {% endif %}
         </div>
-    </section>
+
+        <div class="mt-2 text-center text-gray-400">
+            Page {{ page }} of {{ totalPages }} ({{ total }} items)
+        </div>
 
     <section class="mb-8">
         <h2 class="text-xl font-bold mb-4">Import expenses from CSV</h2>
