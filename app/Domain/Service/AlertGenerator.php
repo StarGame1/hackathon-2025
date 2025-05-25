@@ -9,7 +9,8 @@ use App\Domain\Entity\User;
 class AlertGenerator
 {
     public function __construct(
-        private readonly MonthlySummaryService $monthlySummaryService
+        private readonly MonthlySummaryService $monthlySummaryService,
+        private readonly CategoryConfigService $categoryConfig,
     )
     {
         
@@ -40,6 +41,9 @@ class AlertGenerator
         foreach($totalsD as $category => $data){
             $totals[$category] = $data['value'];
         }
+
+        $budgets = $this->categoryConfig->getBudgets();
+        
         #verificam daca e overspent pt fiecare categorie
         foreach($this->categoryBudgets as $category => $budget){
             $key = strtolower($category) ;

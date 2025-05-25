@@ -13,6 +13,7 @@ use Monolog\Handler\StreamHandler;
 use Monolog\Level;
 use Monolog\Logger;
 use PDO;
+use App\Domain\Service\CategoryConfigService;
 use Psr\Log\LoggerInterface;
 use Slim\App;
 use Slim\Factory\AppFactory;
@@ -54,6 +55,9 @@ class Kernel
                 }
 
                 return $pdo;
+            }),
+            CategoryConfigService::class => factory(function () {
+                return new CategoryConfigService();
             }),
 
             // Map interfaces to concrete implementations

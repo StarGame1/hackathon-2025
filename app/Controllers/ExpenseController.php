@@ -10,6 +10,8 @@ use DateTimeImmutable;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Views\Twig;
+use Psr\Log\LoggerInterface;
+use App\Domain\Service\CategoryConfigService;
 
 class ExpenseController extends BaseController
 {
@@ -18,7 +20,10 @@ class ExpenseController extends BaseController
     public function __construct(
         Twig $view,
         private readonly ExpenseService $expenseService,
-        private readonly UserRepositoryInterface $userRepository
+        private readonly UserRepositoryInterface $userRepository,
+        private readonly LoggerInterface $logger,
+        private readonly CategoryConfigService $categoryConfig,
+
     ) {
         parent::__construct($view);
     }
@@ -58,16 +63,7 @@ class ExpenseController extends BaseController
 
     private function getCategories(): array
     {
-        // TODO: trebe mutate in .env
-        return [
-            'groceries' => 'Groceries',
-            'utilities' => 'Utilities',
-            'transport' => 'Transport',
-            'entertainment' => 'Entertainment',
-            'housing' => 'Housing',
-            'health' => 'Healthcare',
-            'other' => 'Other'
-        ];
+        return $this->categoryConfig->getCategories();
     }
 
     public function create(Request $request, Response $response): Response
@@ -178,5 +174,38 @@ class ExpenseController extends BaseController
         $this->expenseService->delete($expenseId);
     
         return $response->withHeader('Location', '/expenses')->withStatus(302);
+    }
+
+    public function import(Request $request, Response $response): Response
+    {
+        $userId = $_SESSION['user_id'];
+        $user = $this->userRepository->find($userId);
+        
+        $uploadedFiles = $request->getUploadedFiles();
+        $csvFile = $uploadedFiles['csv'] ?? null;
+        
+        if (!$csvFile || $csvFile->getError() !== UPLOAD_ERR_OK) {
+            // Redirect back cu eroare
+            return $response
+                ->withHeader('Location', '/expenses')
+                ->withStatus(302);
+        }
+        
+        try {
+            $importedCount = $this->expenseService->importFromCsv($user, $csvFile);
+            
+            $this->logger->info(sprintf('CSV import completed.'));
+            
+            return $response
+                ->withHeader('Location', '/expenses')
+                ->withStatus(302);
+                
+        } catch (\Exception $e) {
+            $this->logger->error('CSV import failed: ' . $e->getMessage());
+            
+            return $response
+                ->withHeader('Location', '/expenses')
+                ->withStatus(302);
+        }
     }
 }
