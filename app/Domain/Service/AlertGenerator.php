@@ -8,20 +8,60 @@ use App\Domain\Entity\User;
 
 class AlertGenerator
 {
+    public function __construct(
+        private readonly MonthlySummaryService $monthlySummaryService
+    )
+    {
+        
+    }
+
     // TODO: refactor the array below and make categories and their budgets configurable in .env
     // Hint: store them as JSON encoded in .env variable, inject them manually in a dedicated service,
     // then inject and use use that service wherever you need category/budgets information.
     private array $categoryBudgets = [
-        'Groceries' => 300.00,
-        'Utilities' => 200.00,
-        'Transport' => 500.00,
-        // ...
+        'groceries' => 300.00,   
+        'utilities' => 200.00,
+        'transport' => 500.00,
+        'entertainment' => 150.00,
+        'housing' => 800.00,
+        'health' => 100.00,
+        'other' => 100.00
     ];
 
     public function generate(User $user, int $year, int $month): array
     {
-        // TODO: implement this to generate alerts for overspending by category
+        $alerts = [];
+        #luam datele despre total pe categorie
+        $totalsD = $this->monthlySummaryService->computePerCategoryTotals($user, $year, $month);
 
-        return [];
+
+        #extragem doar valoarea
+        $totals = [];
+        foreach($totalsD as $category => $data){
+            $totals[$category] = $data['value'];
+        }
+        #verificam daca e overspent pt fiecare categorie
+        foreach($this->categoryBudgets as $category => $budget){
+            $key = strtolower($category) ;
+            $spent = $totals[$key] ?? 0;
+            if($spent > $budget){
+                $overspent = $spent - $budget;
+                $alerts[] = [
+                    'type' => 'warning',
+                    'message' => sprintf('%s budget exceeded by %.2f €', $category, $overspent)
+                ];
+            }
+
+        }
+
+        if (empty($alerts)) {
+            $alerts[] = [
+                'type' => 'success',
+                'message' => 'Looking good! You are within budget for this month.'
+            ];
+        }
+        
+        return $alerts;
+
     }
 }

@@ -170,20 +170,100 @@ class PdoExpenseRepository implements ExpenseRepositoryInterface
 
     public function sumAmountsByCategory(array $criteria): array
     {
-        // TODO: Implement sumAmountsByCategory() method.
-        return [];
+        $conditions = [];
+        $params = [];
+        
+        if (isset($criteria['user_id'])) {
+            $conditions[] = 'user_id = :user_id';
+            $params['user_id'] = $criteria['user_id'];
+        }
+        
+        if (isset($criteria['year']) && isset($criteria['month'])) {
+            $conditions[] = "strftime('%Y', date) = :year";
+            $conditions[] = "strftime('%m', date) = :month";
+            $params['year'] = sprintf('%04d', $criteria['year']);
+            $params['month'] = sprintf('%02d', $criteria['month']);
+        }
+        
+        $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        
+        $query = "SELECT category, SUM(amount_cents) as total 
+                  FROM expenses 
+                  $whereClause 
+                  GROUP BY category";
+                  
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($params);
+        
+        $results = [];
+        while ($row = $statement->fetch()) {
+            $results[$row['category']] = $row['total'] / 100;
+        }
+        
+        return $results;
     }
 
     public function averageAmountsByCategory(array $criteria): array
     {
-        // TODO: Implement averageAmountsByCategory() method.
-        return [];
+        $conditions = [];
+        $params = [];
+        
+        if (isset($criteria['user_id'])) {
+            $conditions[] = 'user_id = :user_id';
+            $params['user_id'] = $criteria['user_id'];
+        }
+        
+        if (isset($criteria['year']) && isset($criteria['month'])) {
+            $conditions[] = "strftime('%Y', date) = :year";
+            $conditions[] = "strftime('%m', date) = :month";
+            $params['year'] = sprintf('%04d', $criteria['year']);
+            $params['month'] = sprintf('%02d', $criteria['month']);
+        }
+        
+        $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        
+        $query = "SELECT category, AVG(amount_cents) as average 
+                  FROM expenses 
+                  $whereClause 
+                  GROUP BY category";
+                  
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($params);
+        
+        $results = [];
+        while ($row = $statement->fetch()) {
+            $results[$row['category']] = $row['average'] / 100;
+        }
+        
+        return $results;
     }
 
     public function sumAmounts(array $criteria): float
     {
-        // TODO: Implement sumAmounts() method.
-        return 0;
+        $conditions = [];
+        $params = [];
+        
+        #verificam daca e user_id potrivit
+        if (isset($criteria['user_id'])) {
+            $conditions[] = 'user_id = :user_id';
+            $params['user_id'] = $criteria['user_id'];
+        }
+        #criteriu an si luna
+        if (isset($criteria['year']) && isset($criteria['month'])) {
+            $conditions[] = "strftime('%Y', date) = :year";
+            $conditions[] = "strftime('%m', date) = :month";
+            $params['year'] = sprintf('%04d', $criteria['year']);
+            $params['month'] = sprintf('%02d', $criteria['month']);
+        }
+        #creem clauza where dinamic
+        $whereClause = $conditions ? 'WHERE ' . implode(' AND ', $conditions) : '';
+        
+        $query = "SELECT COALESCE(SUM(amount_cents), 0) as total FROM expenses $whereClause";
+        $statement = $this->pdo->prepare($query);
+        $statement->execute($params);
+        
+        $result = $statement->fetch();
+        return $result['total'] / 100;
     }
 
     /**
